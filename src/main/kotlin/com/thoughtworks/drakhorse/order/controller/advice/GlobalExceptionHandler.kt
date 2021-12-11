@@ -2,6 +2,7 @@ package com.thoughtworks.drakhorse.order.controller.advice
 
 import com.thoughtworks.drakhorse.order.exception.InsufficientBalance
 import com.thoughtworks.drakhorse.order.exception.OrderNotExistsException
+import com.thoughtworks.drakhorse.order.exception.PaymentServiceNotAvailable
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -21,6 +22,12 @@ class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.CONFLICT)
   @ExceptionHandler(InsufficientBalance::class)
   fun handleOrderCancellationException(e: InsufficientBalance): ErrorResponse {
+    return ErrorResponse(e.errorCode, e.message)
+  }
+
+  @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+  @ExceptionHandler(PaymentServiceNotAvailable::class)
+  fun handleOrderCancellationException(e: PaymentServiceNotAvailable): ErrorResponse {
     return ErrorResponse(e.errorCode, e.message)
   }
 }

@@ -1,7 +1,9 @@
 package com.thoughtworks.drakhorse.order.controller
 
 import com.thoughtworks.drakhorse.order.IntegrationTest
+import com.thoughtworks.drakhorse.order.exception.InsufficientBalance
 import com.thoughtworks.drakhorse.order.exception.OrderNotExistsException
+import com.thoughtworks.drakhorse.order.exception.PaymentServiceNotAvailable
 import com.thoughtworks.drakhorse.order.service.OrderService
 import org.hamcrest.Matchers.`is`
 import org.junit.jupiter.api.Test
@@ -48,18 +50,34 @@ internal class OrderEntityControllerTest : IntegrationTest() {
   }
 
   @Test
-  fun should_return_error_response_when_() {
+  fun should_return_error_response_when_user_account_balance_insfficient() {
     // given
     val orderId = "20211209119918"
     `when`(orderService.confirmOrderPayment(orderId))
-        .thenAnswer { throw OrderNotExistsException() }
+        .thenAnswer { throw InsufficientBalance() }
 
     mockMvc.perform(
         post("/orders/${orderId}/payment-confirmation")
             .contentType(MediaType.APPLICATION_JSON)
     )
         .andExpect(status().isNotFound)
-        .andExpect(jsonPath("$.code", `is`("ORDER_NOT_EXISTS")))
-        .andExpect(jsonPath("$.message", `is`("order is not exists")))
+        .andExpect(jsonPath("$.code", `is`("INSUFFICIENT_BALANCE")))
+        .andExpect(jsonPath("$.message", `is`("transaction abort, for insufficient balance")))
+  }
+
+  @Test
+  fun should_return_error_response_when_payment_server_not_avaliable() {
+    // given
+    val orderId = "20211209119918"
+    `when`(orderService.confirmOrderPayment(orderId))
+        .thenAnswer { throw PaymentServiceNotAvailable() }
+
+    mockMvc.perform(
+        post("/orders/${orderId}/payment-confirmation")
+            .contentType(MediaType.APPLICATION_JSON)
+    )
+        .andExpect(status().isNotFound)
+        .andExpect(jsonPath("$.code", `is`("SERVICE_NOT_AVAILABLE")))
+        .andExpect(jsonPath("$.message", `is`("payment service is not available")))
   }
 }

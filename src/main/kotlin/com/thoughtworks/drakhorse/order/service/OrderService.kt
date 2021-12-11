@@ -2,6 +2,7 @@ package com.thoughtworks.drakhorse.order.service
 
 import com.thoughtworks.drakhorse.order.domain.OrderFulfillmentType
 import com.thoughtworks.drakhorse.order.domain.OrderStatus
+import com.thoughtworks.drakhorse.order.exception.InsufficientBalance
 import com.thoughtworks.drakhorse.order.exception.OrderCannotCanceled
 import com.thoughtworks.drakhorse.order.exception.OrderNotExistsException
 import com.thoughtworks.drakhorse.order.infrastructure.client.PaymentClient
@@ -32,7 +33,7 @@ class OrderService(
     val order = orderOption.get()
     val paymentResult = paymentClient.payment(TransactionRequest(order.userId, order.merchantId, order.price))
     if ("SUCCESS" != paymentResult) {
-      return false
+      throw InsufficientBalance()
     }
     val orderFulfillmentEntity = OrderFulfillmentEntity(orderId = orderId, type = OrderFulfillmentType.ORDER_PAYMENT_CONFIRMED)
     createOrderPaymentConfirmedFulfillmentRecord(order, orderFulfillmentEntity)
