@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody
 @FeignClient("transfer.service")
 interface PaymentClient {
 
-    @PostMapping("/transfer/transaction")
-    fun payment(@RequestBody transactionRequest: TransactionRequest): Boolean
+  @PostMapping("/transfer/transaction")
+  fun payment(@RequestBody transactionRequest: TransactionRequest): String
 
 }

@@ -15,13 +15,13 @@ import org.springframework.web.context.WebApplicationContext
 @Transactional
 class IntegrationTest {
 
-    protected lateinit var mockMvc: MockMvc
+  protected lateinit var mockMvc: MockMvc
 
-    @Autowired
-    private lateinit var context: WebApplicationContext
+  @Autowired
+  private lateinit var context: WebApplicationContext
 
-    @BeforeEach
-    public fun setUp() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(context).build()
-    }
+  @BeforeEach
+  fun setUp() {
+    this.mockMvc = MockMvcBuilders.webAppContextSetup(context).build()
+  }
 }
