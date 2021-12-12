@@ -7,11 +7,11 @@ import com.thoughtworks.drakhorse.order.exception.OrderCannotCanceled
 import com.thoughtworks.drakhorse.order.exception.OrderNotExistsException
 import com.thoughtworks.drakhorse.order.infrastructure.client.PaymentClient
 import com.thoughtworks.drakhorse.order.infrastructure.client.request.TransactionRequest
+import com.thoughtworks.drakhorse.order.infrastructure.producer.MessageProducer
 import com.thoughtworks.drakhorse.order.infrastructure.repository.OrderFulfillmentRepository
 import com.thoughtworks.drakhorse.order.infrastructure.repository.OrderRepository
 import com.thoughtworks.drakhorse.order.infrastructure.repository.entity.OrderEntity
 import com.thoughtworks.drakhorse.order.infrastructure.repository.entity.OrderFulfillmentEntity
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.ZonedDateTime
@@ -21,7 +21,7 @@ class OrderService(
     private val orderRepository: OrderRepository,
     val orderFulfillmentRepository: OrderFulfillmentRepository,
     private val paymentClient: PaymentClient,
-    private val rabbitTemplate: RabbitTemplate
+    private val messageProducer: MessageProducer
 ) {
 
   /**
@@ -53,10 +53,10 @@ class OrderService(
     }
 
     val order = orderOption.get()
-    if (order.orderTime.plusMinutes(5).isAfter(ZonedDateTime.now())) {
+    if (ZonedDateTime.now().minusMinutes(5).isAfter(order.orderTime)) {
       throw OrderCannotCanceled()
     }
-    rabbitTemplate.convertAndSend("orders", order.merchantId, TransactionRequest(order.merchantId, order.userId, order.price))
+    messageProducer.sendMessage(TransactionRequest(order.merchantId, order.userId, order.price))
     val orderFulfillmentEntity = OrderFulfillmentEntity(orderId = orderId, type = OrderFulfillmentType.CANCELLATION_REQUEST)
     createOrderCancellationRequestFulfillmentRecord(order, orderFulfillmentEntity)
 

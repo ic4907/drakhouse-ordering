@@ -22,6 +22,7 @@ internal class OrderRepositoryTest : IntegrationTest() {
 
   final val orderId = "20211209119918"
   final val orderFulfillmentId = "81018"
+  final val orderCanceledFulfillmentId = "9981018"
   val orderEntity = OrderEntity(
       id = orderId,
       userId = "zhangsan",
@@ -35,6 +36,12 @@ internal class OrderRepositoryTest : IntegrationTest() {
       id = orderFulfillmentId,
       orderId = orderId,
       type = OrderFulfillmentType.ORDER_PAYMENT_CONFIRMED
+  )
+
+  val orderCanceledFulfillmentEntity = OrderFulfillmentEntity(
+      id = orderCanceledFulfillmentId,
+      orderId = orderId,
+      type = OrderFulfillmentType.CANCELLATION_REQUEST
   )
 
   @BeforeEach
@@ -62,9 +69,23 @@ internal class OrderRepositoryTest : IntegrationTest() {
   @Test
   fun should_create_order_payment_confirmed_success() {
     // when
-    val order = orderFulfillmentRepository.save(orderFulfillmentEntity)
+    orderFulfillmentRepository.save(orderFulfillmentEntity)
     // then
-    orderFulfillmentRepository.findById(orderFulfillmentId)
+    val entity = orderFulfillmentRepository.findById(orderFulfillmentId)
+
+    // then
+    assertEquals(orderFulfillmentEntity, entity.get())
+  }
+
+  @Test
+  fun should_create_order_cancel_request_success() {
+    // when
+    orderFulfillmentRepository.save(orderCanceledFulfillmentEntity)
+    // then
+    val entity = orderFulfillmentRepository.findById(orderCanceledFulfillmentId)
+
+    // then
+    assertEquals(orderCanceledFulfillmentEntity, entity.get())
   }
 
 }

@@ -2,6 +2,7 @@ package com.thoughtworks.drakhorse.order.controller
 
 import com.thoughtworks.drakhorse.order.IntegrationTest
 import com.thoughtworks.drakhorse.order.exception.InsufficientBalance
+import com.thoughtworks.drakhorse.order.exception.OrderCannotCanceled
 import com.thoughtworks.drakhorse.order.exception.OrderNotExistsException
 import com.thoughtworks.drakhorse.order.exception.PaymentServiceNotAvailable
 import com.thoughtworks.drakhorse.order.service.OrderService
@@ -13,7 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-internal class OrderEntityControllerTest : IntegrationTest() {
+internal class OrderControllerTest : IntegrationTest() {
 
   @MockBean
   private lateinit var orderService: OrderService
@@ -60,7 +61,7 @@ internal class OrderEntityControllerTest : IntegrationTest() {
         post("/orders/${orderId}/payment-confirmation")
             .contentType(MediaType.APPLICATION_JSON)
     )
-        .andExpect(status().isNotFound)
+        .andExpect(status().isConflict)
         .andExpect(jsonPath("$.code", `is`("INSUFFICIENT_BALANCE")))
         .andExpect(jsonPath("$.message", `is`("transaction abort, for insufficient balance")))
   }
@@ -76,8 +77,40 @@ internal class OrderEntityControllerTest : IntegrationTest() {
         post("/orders/${orderId}/payment-confirmation")
             .contentType(MediaType.APPLICATION_JSON)
     )
-        .andExpect(status().isNotFound)
+        .andExpect(status().isServiceUnavailable)
         .andExpect(jsonPath("$.code", `is`("SERVICE_NOT_AVAILABLE")))
         .andExpect(jsonPath("$.message", `is`("payment service is not available")))
   }
+
+  @Test
+  fun should_cancellation_order_success() {
+    // given
+    val orderId = "20211209119918"
+    `when`(orderService.cancelOrder(orderId))
+        .thenReturn(true)
+
+    mockMvc.perform(
+        post("/orders/${orderId}/cancellation-request")
+            .contentType(MediaType.APPLICATION_JSON)
+    )
+        .andExpect(status().isCreated)
+        .andExpect(content().string("SUCCESS"))
+  }
+
+  @Test
+  fun should_return_error_response_when_order_ordering_time_is_before_5_minits() {
+    // given
+    val orderId = "20211209119918"
+    `when`(orderService.cancelOrder(orderId))
+        .thenAnswer { throw OrderCannotCanceled() }
+
+    mockMvc.perform(
+        post("/orders/${orderId}/cancellation-request")
+            .contentType(MediaType.APPLICATION_JSON)
+    )
+        .andExpect(status().isConflict)
+        .andExpect(jsonPath("$.code", `is`("CANCELLATION_FAILED")))
+        .andExpect(jsonPath("$.message", `is`("cannot cancel order")))
+  }
+
 }

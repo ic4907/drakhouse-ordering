@@ -5,4 +5,5 @@ open class ServerException(
     override val message: String = "server error"
 ) : Exception(message)
 
-class PaymentServiceNotAvailable : BusinessException("SERVICE_NOT_AVAILABLE", "payment service is not available")
+class PaymentServiceNotAvailable : ServerException("SERVICE_NOT_AVAILABLE", "payment service is not available")
+class DatabaseCannotConnected : ServerException("DATABASE_CONNECTED_ERROR", "cannot connected to database")
