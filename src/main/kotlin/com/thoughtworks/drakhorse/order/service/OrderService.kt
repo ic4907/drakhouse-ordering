@@ -24,6 +24,10 @@ class OrderService(
     private val rabbitTemplate: RabbitTemplate
 ) {
 
+  /**
+   * TODO 在service层，由于时间问题，未能解决掉kotlin新版本与mapstruct存在部分兼容问题
+   * TODO 因此实现的时候，service层使用了entity相关的模型，如果时间充分的话，service层应该使用domain模型
+   */
   @Transactional
   fun confirmOrderPayment(orderId: String): Boolean {
     val orderOption = orderRepository.findById(orderId)

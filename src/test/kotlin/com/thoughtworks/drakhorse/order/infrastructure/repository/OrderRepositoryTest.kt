@@ -23,7 +23,7 @@ internal class OrderRepositoryTest : IntegrationTest() {
   final val orderId = "20211209119918"
   final val orderFulfillmentId = "81018"
   val orderEntity = OrderEntity(
-      id = orderFulfillmentId,
+      id = orderId,
       userId = "zhangsan",
       merchantId = "haochide",
       price = BigDecimal.valueOf(100),
@@ -32,7 +32,7 @@ internal class OrderRepositoryTest : IntegrationTest() {
   )
 
   val orderFulfillmentEntity = OrderFulfillmentEntity(
-      id = orderId,
+      id = orderFulfillmentId,
       orderId = orderId,
       type = OrderFulfillmentType.ORDER_PAYMENT_CONFIRMED
   )
@@ -44,8 +44,12 @@ internal class OrderRepositoryTest : IntegrationTest() {
 
   @Test
   fun should_get_order_success_when_find_by_id() {
+    //given
+    orderRepository.save(orderEntity);
+
     // when
     val order = orderRepository.getById(orderId)
+
     // then
     assertEquals(orderEntity.id, order.id)
     assertEquals(orderEntity.userId, order.userId)
